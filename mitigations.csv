@@ -1,0 +1,35 @@
+id,name,built_in,implemented,threats
+MS-M9001,Multi-factor authentication,false,false,MS-TA9001
+MS-M9002,Restrict access to the API server using IP firewall,false,false,MS-TA9001;MS-TA9003;MS-TA9024;MS-TA9029;MS-TA9040
+MS-M9003,Adhere to least-privilege principle,true,false,MS-TA9001;MS-TA9003;MS-TA9006;MS-TA9008;MS-TA9011;MS-TA9012;MS-TA9014;MS-TA9015;MS-TA9016;MS-TA9019;MS-TA9020;MS-TA9022;MS-TA9025;MS-TA9026;MS-TA9029;MS-TA9030;MS-TA9035;MS-TA9037;MS-TA9041
+MS-M9004,Secure CI/CD environment,false,false,MS-TA9002
+MS-M9005.001,Gate generated images in CI/CD pipeline,false,false,MS-TA9002;MS-TA9004;MS-TA9009
+MS-M9005.002,Gate images pushed to registries,false,false,MS-TA9002;MS-TA9004;MS-TA9009
+MS-M9005.003,Gate images deployed to Kubernetes cluster,false,false,MS-TA9002;MS-TA9004;MS-TA9008;MS-TA9009;MS-TA9011;MS-TA9012;MS-TA9014;MS-TA9018;MS-TA9023
+MS-M9006,Enable Just In Time access to API server,false,false,MS-TA9003
+MS-M9007,Network intrusion prevention,false,false,MS-TA9004
+MS-M9008,Limit access to services over network,true,false,MS-TA9005
+MS-M9009,Require strong authentication to services,false,false,MS-TA9005;MS-TA9024;MS-TA9030
+MS-M9010,Restrict exec commands on pods,true,false,MS-TA9006;MS-TA9041
+MS-M9011,Restrict container runtime using LSM,true,false,MS-TA9006;MS-TA9007;MS-TA9009;MS-TA9010;MS-TA9013;MS-TA9039;MS-TA9040
+MS-M9012,Remove tools from container images,false,false,MS-TA9007;MS-TA9039
+MS-M9013,Restrict over permissive containers,true,false,MS-TA9008;MS-TA9011;MS-TA9012;MS-TA9013;MS-TA9014;MS-TA9018;MS-TA9020;MS-TA9026;MS-TA9036
+MS-M9014,Network segmentation,true,false,MS-TA9005;MS-TA9009;MS-TA9010;MS-TA9024;MS-TA9030;MS-TA9031;MS-TA9034
+MS-M9015,Avoid running management interface on containers,true,false,MS-TA9010
+MS-M9016,Restrict file and directory permissions,true,false,MS-TA9013;MS-TA9017;MS-TA9021
+MS-M9017,Ensure that pods meet defined Pod Security Standards,true,false,MS-TA9013;MS-TA9018
+MS-M9018,Restricting cloud metadata API access,true,false,MS-TA9020;MS-TA9028;MS-TA9033;MS-TA9037
+MS-M9019,Allocate specific identities to pods,true,false,MS-TA9020;MS-TA9028
+MS-M9020,Collect logs to remote data storage,false,false,MS-TA9021;MS-TA9022
+MS-M9021,Restrict the usage of unauthenticated APIs in the cluster,true,false,MS-TA9024
+MS-M9022,Use managed secret store,false,false,MS-TA9025;MS-TA9027
+MS-M9023,Remove unused secrets from the cluster,true,false,MS-TA9025
+MS-M9024,Restrict access to etcd,true,false,MS-TA9025
+MS-M9025,Disable service account auto mount,true,false,MS-TA9016
+MS-M9026,Avoid using plain text credentials,true,false,MS-TA9027
+MS-M9027,Use NodeRestriction admission controller,true,false,MS-TA9030
+MS-M9028,Use CNIs that are not prone to ARP poisoning,false,false,MS-TA9036
+MS-M9029,Set requests and limits for containers,true,false,MS-TA9040
+MS-M9030,Use cloud storage provider,false,false,MS-TA9038
+MS-M9031,Implement data backup strategy,false,false,MS-TA9038
+MS-M9032,Avoid using web-hosted manifest for Kubelet,true,false,MS-TA9017

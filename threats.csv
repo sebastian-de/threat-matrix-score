@@ -1,0 +1,41 @@
+threat_id,name,tactics,primary_component,applicable
+MS-TA9001,Using cloud credentials,InitialAccess,kube-apiserver,true
+MS-TA9002,Compromised image in registry,InitialAccess,container registry,true
+MS-TA9003,Kubeconfig file,InitialAccess,kube-apiserver,true
+MS-TA9004,Application vulnerability,InitialAccess,workload,true
+MS-TA9005,Exposed sensitive interfaces,InitialAccess;Discovery,kube-apiserver,true
+MS-TA9006,Exec into container,Execution,workload,true
+MS-TA9007,Bash or cmd inside container,Execution,workload,true
+MS-TA9008,New container,Execution,workload,true
+MS-TA9009,Application exploit (RCE),Execution,workload,true
+MS-TA9010,SSH server running inside container,Execution,workload,true
+MS-TA9011,Sidecar injection,Execution,workload,true
+MS-TA9012,Backdoor container,Persistence,workload,true
+MS-TA9013,Writable hostPath mount,Persistence;PrivilegeEscalation;LateralMovement,worker node,true
+MS-TA9014,Kubernetes CronJob,Persistence,workload,true
+MS-TA9015,Malicious admission controller,Persistence;CredentialAccess,kube-apiserver,true
+MS-TA9016,Container service account,CredentialAccess;LateralMovement;Persistence,kube-apiserver,true
+MS-TA9017,Static pods,Persistence,worker node,true
+MS-TA9018,Privileged container,PrivilegeEscalation,worker node,true
+MS-TA9019,Cluster-admin binding,PrivilegeEscalation,kube-apiserver,true
+MS-TA9020,Access cloud resources,PrivilegeEscalation;LateralMovement,workload,true
+MS-TA9021,Clear container logs,DefenseEvasion,observability stack,true
+MS-TA9022,Delete Kubernetes events,DefenseEvasion,observability stack,true
+MS-TA9023,Pod or container name similarity,DefenseEvasion,workload,true
+MS-TA9024,Connect from proxy server,DefenseEvasion,kube-apiserver,true
+MS-TA9025,List Kubernetes secrets,CredentialAccess,etcd,true
+MS-TA9026,Mount service principal,CredentialAccess,workload,true
+MS-TA9027,Application credentials in configuration files,CredentialAccess;LateralMovement,workload,true
+MS-TA9028,Access Managed Identity credentials,CredentialAccess,workload,true
+MS-TA9029,Access Kubernetes API server,Discovery,kube-apiserver,true
+MS-TA9030,Access Kubelet API,Discovery,worker node,true
+MS-TA9031,Network mapping,Discovery,pod network,true
+MS-TA9033,Instance Metadata API,Discovery,worker node,true
+MS-TA9034,Cluster internal networking,LateralMovement,pod network,true
+MS-TA9035,CoreDNS poisoning,LateralMovement,pod network,true
+MS-TA9036,ARP poisoning and IP spoofing,LateralMovement,pod network,true
+MS-TA9037,Images from a private registry,Collection,container registry,true
+MS-TA9038,Data destruction,Impact,etcd,true
+MS-TA9039,Resource hijacking,Impact,worker node,true
+MS-TA9040,Denial of service,Impact,ingress controller,true
+MS-TA9041,Collecting data from pod,Collection,workload,true

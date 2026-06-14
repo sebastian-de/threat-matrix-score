@@ -1,0 +1,9 @@
+component,confidentiality,integrity,availability
+kube-apiserver,high,high,high
+etcd,high,high,high
+ingress controller,high,high,high
+container registry,medium,high,medium
+worker node,high,high,high
+pod network,high,high,high
+workload,high,high,high
+observability stack,low,high,medium
