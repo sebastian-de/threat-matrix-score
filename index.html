@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>Kubernetes Threat Matrix Score</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta property="og:title" content="Kubernetes Threat Matrix Score" />
+  <meta property="og:locale" content="en_US" />
+  <meta name="description"
+    content="Small script to prioritise security mitigations from the Threat Matrix for Kubernetes (HTML/JS version)." />
+  <meta property="og:description"
+    content="Small script to prioritise security mitigations from the Threat Matrix for Kubernetes (HTML/JS version)." />
+  <meta property="og:url" content="https://sebastian-de.github.io/threat-matrix-score/" />
+  <meta property="og:site_name" content="Kubernetes Threat Matrix Score" />
+  <meta property="og:type" content="website" />
+  <meta name="google-site-verification" content="tg2KBM-ZfNQcTb2DCocmC7uS3vNY6KqNUdwB4dKN3G4" />
+  <link rel="canonical" href="https://sebastian-de.github.io/threat-matrix-score/" />
+  <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"WebSite","description":"Small script to prioritise security mitigations from the Threat Matrix for Kubernetes (HTML/JS version).","headline":"Kubernetes Threat Matrix Score","name":"Kubernetes Threat Matrix Score","url":"https://sebastian-de.github.io/threat-matrix-score/"}
+  </script>
+  <!-- from https://codepo8.github.io/css-fork-on-github-ribbon/ -->
+  <style>
+    #forkongithub a {
+      background: #000;
+      color: #fff;
+      text-decoration: none;
+      font-family: arial, sans-serif;
+      text-align: center;
+      font-weight: bold;
+      padding: 3px 20px;
+      font-size: 0.75rem;
+      line-height: 1rem;
+      position: relative;
+      transition: 0.5s;
+    }
+
+    #forkongithub a:hover {
+      background: #c11;
+      color: #fff;
+    }
+
+    #forkongithub a::before,
+    #forkongithub a::after {
+      content: "";
+      width: 100%;
+      display: block;
+      position: absolute;
+      top: 1px;
+      left: 0;
+      height: 1px;
+      background: #fff;
+    }
+
+    #forkongithub a::after {
+      bottom: 1px;
+      top: auto;
+    }
+
+    @media screen and (min-width:400px) {
+      #forkongithub {
+        position: absolute;
+        display: block;
+        top: 0;
+        left: 0;
+        width: 145px;
+        overflow: hidden;
+        height: 145px;
+        z-index: 9999;
+      }
+
+      #forkongithub a {
+        width: 150px;
+        position: absolute;
+        top: 35px;
+        left: -35px;
+        transform: rotate(-45deg);
+        -webkit-transform: rotate(-45deg);
+        -ms-transform: rotate(-45deg);
+        -moz-transform: rotate(-45deg);
+        -o-transform: rotate(-45deg);
+        box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.8);
+      }
+    }
+  </style>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 2rem auto;
+      padding: 2rem 2rem 0;
+      max-width: 1400px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      margin: 0;
+      text-align: center;
+    }
+
+    h2 {
+      font-size: 1.15rem;
+      margin: 1.5rem 0 0.5rem;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    summary h2 {
+      display: inline;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 0.35rem 0.55rem;
+      border: 1px solid #ccc;
+      vertical-align: top;
+    }
+
+    th {
+      background: #eee;
+    }
+
+    td.num,
+    th.num {
+      text-align: right;
+    }
+
+    tr.inactive td:not(.controls) {
+      color: #999;
+    }
+
+    .threats-cell {
+      font-family: monospace;
+      font-size: 0.8rem;
+      word-break: break-all;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 12rem;
+      font-family: monospace;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+
+<body>
+  <span id="forkongithub"><a href="https://github.com/sebastian-de/threat-matrix-score">Fork me on GitHub</a></span>
+  <header>
+    <div>
+      <h1>Kubernetes Threat Matrix Score</h1>
+      <p style="margin-top: 2rem;"> Based on Microsoft's <a
+          href="https://github.com/microsoft/Threat-Matrix-for-Kubernetes">Threat Matrix for
+          Kubernetes</a>. Data licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+        State persists in localStorage.</p>
+    </div>
+    <div class="header-controls">
+      <label
+        title="When on, each threat score is calculated only from the CIA dimensions its MITRE ATT&CK® tactic typically targets.">
+        <input type="checkbox" id="apply-mapping-cb" data-scope="options" data-field="applyTacticMapping">
+        Apply tactic &rarr; CIA mapping
+      </label>
+      <button id="reset-btn" type="button">Reset to defaults</button>
+    </div>
+  </header>
+
+  <main>
+
+    <details>
+      <summary>
+        <h2>Protection levels</h2>
+      </summary>
+      <table id="pl-table">
+        <thead>
+          <tr>
+            <th>Component</th>
+            <th>Confidentiality</th>
+            <th>Integrity</th>
+            <th>Availability</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </details>
+
+    <details open>
+      <summary>
+        <h2>Threats</h2>
+      </summary>
+      <table id="threats-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Tactics</th>
+            <th>Component</th>
+            <th>Applicable</th>
+            <th class="num">Score</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </details>
+
+    <div class="section-head">
+      <h2>Mitigations</h2>
+      <button id="export-csv-btn" type="button"
+        title="Exports unimplemented mitigations that address at least one applicable threat.">Download CSV</button>
+    </div>
+    <table id="results-table">
+      <thead>
+        <tr>
+          <th>mitigation_id</th>
+          <th>mitigation_name</th>
+          <th>built_in</th>
+          <th>implemented</th>
+          <th class="num">score</th>
+          <th class="num">score_c</th>
+          <th class="num">score_i</th>
+          <th class="num">score_a</th>
+          <th class="num">threat_count</th>
+          <th>threats</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <h2>Notes</h2>
+    <textarea id="notes" readonly></textarea>
+
+  </main>
+
+  <script>
+    "use strict";
+
+    const DEFAULT_LEVELS = { high: 3, medium: 2, low: 1 };
+
+    // CIA dimensions typically targeted by the respective MITRE tactic.
+    // Only applied when `applyTacticMapping` is true.
+    const TACTIC_IMPACTS = {
+      InitialAccess: ["c", "i", "a"],
+      Execution: ["c", "i", "a"],
+      PrivilegeEscalation: ["c", "i", "a"],
+      LateralMovement: ["c", "i", "a"],
+      Collection: ["c"],
+      CredentialAccess: ["c"],
+      Discovery: ["c"],
+      DefenseEvasion: ["i"],
+      Persistence: ["i"],
+      Impact: ["i", "a"],
+    };
+
+    const DEFAULT_PROTECTION_LEVELS = [
+      { component: "kube-apiserver", c: "high", i: "high", a: "medium" },
+      { component: "etcd", c: "high", i: "high", a: "medium" },
+      { component: "ingress controller", c: "high", i: "high", a: "high" },
+      { component: "container registry", c: "low", i: "high", a: "medium" },
+      { component: "worker node", c: "high", i: "high", a: "medium" },
+      { component: "pod network", c: "high", i: "high", a: "high" },
+      { component: "workload", c: "high", i: "high", a: "high" },
+      { component: "observability stack", c: "low", i: "high", a: "medium" },
+    ];
+
+    const DEFAULT_THREATS = [
+      { id: "MS-TA9001", name: "Using cloud credentials", tactics: ["InitialAccess"], primaryComponent: "kube-apiserver", applicable: true },
+      { id: "MS-TA9002", name: "Compromised image in registry", tactics: ["InitialAccess"], primaryComponent: "container registry", applicable: true },
+      { id: "MS-TA9003", name: "Kubeconfig file", tactics: ["InitialAccess"], primaryComponent: "kube-apiserver", applicable: true },
+      { id: "MS-TA9004", name: "Application vulnerability", tactics: ["InitialAccess"], primaryComponent: "workload", applicable: true },
+      { id: "MS-TA9005", name: "Exposed sensitive interfaces", tactics: ["InitialAccess", "Discovery"], primaryComponent: "kube-apiserver", applicable: true },
+      { id: "MS-TA9006", name: "Exec into container", tactics: ["Execution"], primaryComponent: "workload", applicable: true },
+      { id: "MS-TA9007", name: "Bash or cmd inside container", tactics: ["Execution"], primaryComponent: "workload", applicable: true },
+      { id: "MS-TA9008", name: "New container", tactics: ["Execution"], primaryComponent: "workload", applicable: true },
+      { id: "MS-TA9009", name: "Application exploit (RCE)", tactics: ["Execution"], primaryComponent: "workload", applicable: true },
+      { id: "MS-TA9010", name: "SSH server running inside container", tactics: ["Execution"], primaryComponent: "workload", applicable: true },
+      { id: "MS-TA9011", name: "Sidecar injection", tactics: ["Execution"], primaryComponent: "workload", applicable: true },
+      { id: "MS-TA9012", name: "Backdoor container", tactics: ["Persistence"], primaryComponent: "workload", applicable: true },
+      { id: "MS-TA9013", name: "Writable hostPath mount", tactics: ["Persistence", "PrivilegeEscalation", "LateralMovement"], primaryComponent: "worker node", applicable: true },
+      { id: "MS-TA9014", name: "Kubernetes CronJob", tactics: ["Persistence"], primaryComponent: "workload", applicable: true },
+      { id: "MS-TA9015", name: "Malicious admission controller", tactics: ["Persistence", "CredentialAccess"], primaryComponent: "kube-apiserver", applicable: true },
+      { id: "MS-TA9016", name: "Container service account", tactics: ["CredentialAccess", "LateralMovement", "Persistence"], primaryComponent: "kube-apiserver", applicable: true },
+      { id: "MS-TA9017", name: "Static pods", tactics: ["Persistence"], primaryComponent: "worker node", applicable: true },
+      { id: "MS-TA9018", name: "Privileged container", tactics: ["PrivilegeEscalation"], primaryComponent: "worker node", applicable: true },
+      { id: "MS-TA9019", name: "Cluster-admin binding", tactics: ["PrivilegeEscalation"], primaryComponent: "kube-apiserver", applicable: true },
+      { id: "MS-TA9020", name: "Access cloud resources", tactics: ["PrivilegeEscalation", "LateralMovement"], primaryComponent: "workload", applicable: true },
+      { id: "MS-TA9021", name: "Clear container logs", tactics: ["DefenseEvasion"], primaryComponent: "observability stack", applicable: true },
+      { id: "MS-TA9022", name: "Delete Kubernetes events", tactics: ["DefenseEvasion"], primaryComponent: "observability stack", applicable: true },
+      { id: "MS-TA9023", name: "Pod or container name similarity", tactics: ["DefenseEvasion"], primaryComponent: "workload", applicable: true },
+      { id: "MS-TA9024", name: "Connect from proxy server", tactics: ["DefenseEvasion"], primaryComponent: "kube-apiserver", applicable: true },
+      { id: "MS-TA9025", name: "List Kubernetes secrets", tactics: ["CredentialAccess"], primaryComponent: "etcd", applicable: true },
+      { id: "MS-TA9026", name: "Mount service principal", tactics: ["CredentialAccess"], primaryComponent: "workload", applicable: true },
+      { id: "MS-TA9027", name: "Application credentials in configuration files", tactics: ["CredentialAccess", "LateralMovement"], primaryComponent: "workload", applicable: true },
+      { id: "MS-TA9028", name: "Access Managed Identity credentials", tactics: ["CredentialAccess"], primaryComponent: "workload", applicable: true },
+      { id: "MS-TA9029", name: "Access Kubernetes API server", tactics: ["Discovery"], primaryComponent: "kube-apiserver", applicable: true },
+      { id: "MS-TA9030", name: "Access Kubelet API", tactics: ["Discovery"], primaryComponent: "worker node", applicable: true },
+      { id: "MS-TA9031", name: "Network mapping", tactics: ["Discovery"], primaryComponent: "pod network", applicable: true },
+      { id: "MS-TA9033", name: "Instance Metadata API", tactics: ["Discovery"], primaryComponent: "worker node", applicable: true },
+      { id: "MS-TA9034", name: "Cluster internal networking", tactics: ["LateralMovement"], primaryComponent: "pod network", applicable: true },
+      { id: "MS-TA9035", name: "CoreDNS poisoning", tactics: ["LateralMovement"], primaryComponent: "pod network", applicable: true },
+      { id: "MS-TA9036", name: "ARP poisoning and IP spoofing", tactics: ["LateralMovement"], primaryComponent: "pod network", applicable: true },
+      { id: "MS-TA9037", name: "Images from a private registry", tactics: ["Collection"], primaryComponent: "container registry", applicable: true },
+      { id: "MS-TA9038", name: "Data destruction", tactics: ["Impact"], primaryComponent: "etcd", applicable: true },
+      { id: "MS-TA9039", name: "Resource hijacking", tactics: ["Impact"], primaryComponent: "worker node", applicable: true },
+      { id: "MS-TA9040", name: "Denial of service", tactics: ["Impact"], primaryComponent: "ingress controller", applicable: true },
+      { id: "MS-TA9041", name: "Collecting data from pod", tactics: ["Collection"], primaryComponent: "workload", applicable: true },
+    ];
+
+    const DEFAULT_MITIGATIONS = [
+      { id: "MS-M9001", name: "Multi-factor authentication", builtIn: false, implemented: false, threats: ["MS-TA9001"] },
+      { id: "MS-M9002", name: "Restrict access to the API server using IP firewall", builtIn: false, implemented: false, threats: ["MS-TA9001", "MS-TA9003", "MS-TA9024", "MS-TA9029", "MS-TA9040"] },
+      { id: "MS-M9003", name: "Adhere to least-privilege principle", builtIn: true, implemented: false, threats: ["MS-TA9001", "MS-TA9003", "MS-TA9006", "MS-TA9008", "MS-TA9011", "MS-TA9012", "MS-TA9014", "MS-TA9015", "MS-TA9016", "MS-TA9019", "MS-TA9020", "MS-TA9022", "MS-TA9025", "MS-TA9026", "MS-TA9029", "MS-TA9030", "MS-TA9035", "MS-TA9037", "MS-TA9041"] },
+      { id: "MS-M9004", name: "Secure CI/CD environment", builtIn: false, implemented: false, threats: ["MS-TA9002"] },
+      { id: "MS-M9005.001", name: "Gate generated images in CI/CD pipeline", builtIn: false, implemented: false, threats: ["MS-TA9002", "MS-TA9004", "MS-TA9009"] },
+      { id: "MS-M9005.002", name: "Gate images pushed to registries", builtIn: false, implemented: false, threats: ["MS-TA9002", "MS-TA9004", "MS-TA9009"] },
+      { id: "MS-M9005.003", name: "Gate images deployed to Kubernetes cluster", builtIn: false, implemented: false, threats: ["MS-TA9002", "MS-TA9004", "MS-TA9008", "MS-TA9009", "MS-TA9011", "MS-TA9012", "MS-TA9014", "MS-TA9018", "MS-TA9023"] },
+      { id: "MS-M9006", name: "Enable Just In Time access to API server", builtIn: false, implemented: false, threats: ["MS-TA9003"] },
+      { id: "MS-M9007", name: "Network intrusion prevention", builtIn: true, implemented: false, threats: ["MS-TA9004"] },
+      { id: "MS-M9008", name: "Limit access to services over network", builtIn: true, implemented: false, threats: ["MS-TA9005"] },
+      { id: "MS-M9009", name: "Require strong authentication to services", builtIn: false, implemented: false, threats: ["MS-TA9005", "MS-TA9024", "MS-TA9030"] },
+      { id: "MS-M9010", name: "Restrict exec commands on pods", builtIn: true, implemented: false, threats: ["MS-TA9006", "MS-TA9041"] },
+      { id: "MS-M9011", name: "Restrict container runtime using LSM", builtIn: true, implemented: false, threats: ["MS-TA9006", "MS-TA9007", "MS-TA9009", "MS-TA9010", "MS-TA9013", "MS-TA9039", "MS-TA9040"] },
+      { id: "MS-M9012", name: "Remove tools from container images", builtIn: false, implemented: false, threats: ["MS-TA9007", "MS-TA9039"] },
+      { id: "MS-M9013", name: "Restrict over permissive containers", builtIn: true, implemented: false, threats: ["MS-TA9008", "MS-TA9011", "MS-TA9012", "MS-TA9013", "MS-TA9014", "MS-TA9018", "MS-TA9020", "MS-TA9026", "MS-TA9036"] },
+      { id: "MS-M9014", name: "Network segmentation", builtIn: true, implemented: false, threats: ["MS-TA9005", "MS-TA9009", "MS-TA9010", "MS-TA9024", "MS-TA9030", "MS-TA9031", "MS-TA9034"] },
+      { id: "MS-M9015", name: "Avoid running management interface on containers", builtIn: true, implemented: false, threats: ["MS-TA9010"] },
+      { id: "MS-M9016", name: "Restrict file and directory permissions", builtIn: true, implemented: false, threats: ["MS-TA9013", "MS-TA9017", "MS-TA9021"] },
+      { id: "MS-M9017", name: "Ensure that pods meet defined Pod Security Standards", builtIn: true, implemented: false, threats: ["MS-TA9013", "MS-TA9018"] },
+      { id: "MS-M9018", name: "Restricting cloud metadata API access", builtIn: true, implemented: false, threats: ["MS-TA9020", "MS-TA9028", "MS-TA9033", "MS-TA9037"] },
+      { id: "MS-M9019", name: "Allocate specific identities to pods", builtIn: true, implemented: false, threats: ["MS-TA9020", "MS-TA9028"] },
+      { id: "MS-M9020", name: "Collect logs to remote data storage", builtIn: false, implemented: false, threats: ["MS-TA9021", "MS-TA9022"] },
+      { id: "MS-M9021", name: "Restrict the usage of unauthenticated APIs in the cluster", builtIn: true, implemented: false, threats: ["MS-TA9024"] },
+      { id: "MS-M9022", name: "Use managed secret store", builtIn: false, implemented: false, threats: ["MS-TA9025", "MS-TA9027"] },
+      { id: "MS-M9023", name: "Remove unused secrets from the cluster", builtIn: true, implemented: false, threats: ["MS-TA9025"] },
+      { id: "MS-M9024", name: "Restrict access to etcd", builtIn: true, implemented: false, threats: ["MS-TA9025"] },
+      { id: "MS-M9025", name: "Disable service account auto mount", builtIn: true, implemented: false, threats: ["MS-TA9016"] },
+      { id: "MS-M9026", name: "Avoid using plain text credentials", builtIn: true, implemented: false, threats: ["MS-TA9027"] },
+      { id: "MS-M9027", name: "Use NodeRestriction admission controller", builtIn: true, implemented: false, threats: ["MS-TA9030"] },
+      { id: "MS-M9028", name: "Use CNIs that are not prone to ARP poisoning", builtIn: false, implemented: false, threats: ["MS-TA9036"] },
+      { id: "MS-M9029", name: "Set requests and limits for containers", builtIn: true, implemented: false, threats: ["MS-TA9040"] },
+      { id: "MS-M9030", name: "Use cloud storage provider", builtIn: false, implemented: false, threats: ["MS-TA9038"] },
+      { id: "MS-M9031", name: "Implement data backup strategy", builtIn: false, implemented: false, threats: ["MS-TA9038"] },
+      { id: "MS-M9032", name: "Avoid using web-hosted manifest for Kubelet", builtIn: true, implemented: false, threats: ["MS-TA9017"] },
+    ];
+
+    const STORAGE_KEY = "tms-state-v2";
+
+    function defaultState() {
+      return {
+        schemaVersion: 1,
+        levels: { ...DEFAULT_LEVELS },
+        options: { applyTacticMapping: false },
+        protectionLevels: Object.fromEntries(
+          DEFAULT_PROTECTION_LEVELS.map(g => [g.component, { c: g.c, i: g.i, a: g.a }])
+        ),
+        threats: Object.fromEntries(
+          DEFAULT_THREATS.map(t => [t.id, { applicable: t.applicable }])
+        ),
+        mitigations: Object.fromEntries(
+          DEFAULT_MITIGATIONS.map(m => [m.id, { implemented: m.implemented }])
+        ),
+      };
+    }
+
+    function mergePerKey(defaults, saved) {
+      if (!saved || typeof saved !== "object") return defaults;
+      const out = {};
+      for (const key of Object.keys(defaults)) {
+        out[key] = { ...defaults[key], ...(saved[key] || {}) };
+      }
+      return out;
+    }
+
+    function loadState() {
+      const def = defaultState();
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return def;
+      try {
+        const saved = JSON.parse(raw);
+        if (saved.schemaVersion !== 1) return def;
+        return {
+          schemaVersion: 1,
+          levels: { ...def.levels, ...(saved.levels || {}) },
+          options: { ...def.options, ...(saved.options || {}) },
+          protectionLevels: mergePerKey(def.protectionLevels, saved.protectionLevels),
+          threats: mergePerKey(def.threats, saved.threats),
+          mitigations: mergePerKey(def.mitigations, saved.mitigations),
+        };
+      } catch (e) {
+        console.warn("Failed to parse saved state; falling back to defaults.", e);
+        return def;
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    let state = loadState();
+
+    function level(v) {
+      return state.levels[String(v).trim().toLowerCase()];
+    }
+
+    function threatAffects(threat) {
+      if (!state.options.applyTacticMapping) return new Set(["c", "i", "a"]);
+      const set = new Set();
+      for (const t of threat.tactics) {
+        const dims = TACTIC_IMPACTS[t];
+        if (!dims) throw new Error(`Unknown tactic '${t}' on threat ${threat.id}`);
+        for (const d of dims) set.add(d);
+      }
+      return set;
+    }
+
+    function threatScores(threat) {
+      const pl = state.protectionLevels[threat.primaryComponent];
+      const affects = threatAffects(threat);
+      const c = affects.has("c") ? level(pl.c) : 0;
+      const i = affects.has("i") ? level(pl.i) : 0;
+      const a = affects.has("a") ? level(pl.a) : 0;
+      return { c, i, a, total: Math.max(c, i, a), affects };
+    }
+
+    function scoreMitigations() {
+      const scoresByThreat = {};
+      for (const t of DEFAULT_THREATS) {
+        if (state.threats[t.id].applicable) {
+          scoresByThreat[t.id] = threatScores(t);
+        }
+      }
+
+      const rows = [];
+      for (const m of DEFAULT_MITIGATIONS) {
+        const covered = [...m.threats].sort()
+          .filter(tid => tid in scoresByThreat)
+          .map(tid => [tid, scoresByThreat[tid]]);
+        const sumOf = (key) => covered.reduce((s, [, x]) => s + x[key], 0);
+        rows.push({
+          mitigationId: m.id,
+          mitigationName: m.name,
+          builtIn: String(m.builtIn).toLowerCase(),
+          implemented: state.mitigations[m.id].implemented,
+          score: sumOf("total"),
+          scoreC: sumOf("c"),
+          scoreI: sumOf("i"),
+          scoreA: sumOf("a"),
+          threatCount: covered.length,
+          threats: covered.map(([tid, x]) => `${tid}(${x.total})`).join(";"),
+        });
+      }
+
+      rows.sort((a, b) => {
+        if (a.score !== b.score) return b.score - a.score;
+        if (a.threatCount !== b.threatCount) return b.threatCount - a.threatCount;
+        return a.mitigationId.localeCompare(b.mitigationId);
+      });
+      return rows;
+    }
+
+    const LEVEL_OPTIONS = ["high", "medium", "low"];
+
+    function el(tag, attrs = {}, ...children) {
+      const node = document.createElement(tag);
+      for (const [k, v] of Object.entries(attrs)) {
+        if (k === "class") node.className = v;
+        else if (k === "dataset") for (const [dk, dv] of Object.entries(v)) node.dataset[dk] = dv;
+        else if (k.startsWith("on")) node.addEventListener(k.slice(2), v);
+        else if (k === "checked" || k === "readOnly" || k === "selected") node[k] = v;
+        else node.setAttribute(k, v);
+      }
+      for (const c of children) {
+        if (c == null || c === false) continue;
+        node.append(c instanceof Node ? c : document.createTextNode(String(c)));
+      }
+      return node;
+    }
+
+    function levelSelect(scope, key, field, current) {
+      const opts = LEVEL_OPTIONS.map(lvl =>
+        el("option", { value: lvl, selected: current === lvl }, lvl),
+      );
+      return el("select", { dataset: { scope, key, field } }, ...opts);
+    }
+
+    function buildProtectionLevelsEditor() {
+      const tbody = document.querySelector("#pl-table tbody");
+      for (const g of DEFAULT_PROTECTION_LEVELS) {
+        const cur = state.protectionLevels[g.component];
+        tbody.appendChild(el("tr", {},
+          el("td", {}, g.component),
+          el("td", {}, levelSelect("protectionLevels", g.component, "c", cur.c)),
+          el("td", {}, levelSelect("protectionLevels", g.component, "i", cur.i)),
+          el("td", {}, levelSelect("protectionLevels", g.component, "a", cur.a)),
+        ));
+      }
+    }
+
+    function buildThreatsEditor() {
+      const tbody = document.querySelector("#threats-table tbody");
+      for (const t of DEFAULT_THREATS) {
+        tbody.appendChild(el("tr", {},
+          el("td", {}, t.id),
+          el("td", {}, t.name),
+          el("td", {}, t.tactics.join(", ")),
+          el("td", {}, t.primaryComponent),
+          el("td", { class: "controls" },
+            el("input", {
+              type: "checkbox",
+              checked: state.threats[t.id].applicable,
+              dataset: { scope: "threats", key: t.id, field: "applicable" },
+            }),
+          ),
+          el("td", { class: "num", dataset: { scoreId: t.id } }, "-"),
+        ));
+      }
+    }
+
+    function renderThreatScores() {
+      for (const t of DEFAULT_THREATS) {
+        const cell = document.querySelector(`[data-score-id="${t.id}"]`);
+        if (state.threats[t.id].applicable) {
+          const s = threatScores(t);
+          const dims = ["c", "i", "a"].filter(d => s.affects.has(d)).join("").toUpperCase();
+          cell.textContent = `${s.total} (${dims})`;
+          cell.closest("tr").classList.remove("inactive");
+        } else {
+          cell.textContent = "-";
+          cell.closest("tr").classList.add("inactive");
+        }
+      }
+    }
+
+    function renderResults() {
+      const tbody = document.querySelector("#results-table tbody");
+      tbody.replaceChildren();
+      const rows = scoreMitigations();
+      for (const r of rows) {
+        tbody.appendChild(el("tr", r.implemented ? { class: "inactive" } : {},
+          el("td", {}, r.mitigationId),
+          el("td", {}, r.mitigationName),
+          el("td", {}, r.builtIn),
+          el("td", { class: "controls" },
+            el("input", {
+              type: "checkbox",
+              checked: r.implemented,
+              dataset: { scope: "mitigations", key: r.mitigationId, field: "implemented" },
+            }),
+          ),
+          el("td", { class: "num" }, String(r.score)),
+          el("td", { class: "num" }, String(r.scoreC)),
+          el("td", { class: "num" }, String(r.scoreI)),
+          el("td", { class: "num" }, String(r.scoreA)),
+          el("td", { class: "num" }, String(r.threatCount)),
+          el("td", { class: "threats-cell" }, r.threats),
+        ));
+      }
+      if (rows.length === 0) {
+        tbody.appendChild(el("tr", {}, el("td", { colspan: 10 }, "(no mitigations defined)")));
+      }
+    }
+
+    function renderNotes() {
+      const sections = [];
+
+      if (state.options.applyTacticMapping) {
+        sections.push("== Tactic -> CIA mapping enabled ==\n- per-dimension scores are narrowed to the CIA dimensions each threat's tactics typically target");
+      }
+
+      const plDeltas = [];
+      for (const g of DEFAULT_PROTECTION_LEVELS) {
+        const cur = state.protectionLevels[g.component];
+        if (cur.c !== g.c || cur.i !== g.i || cur.a !== g.a) {
+          plDeltas.push(`- ${g.component}: C=${cur.c} I=${cur.i} A=${cur.a} (was C=${g.c} I=${g.i} A=${g.a})`);
+        }
+      }
+      if (plDeltas.length) sections.push("== Protection level changes ==\n" + plDeltas.join("\n"));
+
+      const notApplicable = [];
+      for (const t of DEFAULT_THREATS) {
+        if (!state.threats[t.id].applicable) {
+          notApplicable.push(`- ${t.id} ${t.name}`);
+        }
+      }
+      if (notApplicable.length) sections.push("== Threats marked not applicable ==\n" + notApplicable.join("\n"));
+
+      const implemented = [];
+      for (const m of DEFAULT_MITIGATIONS) {
+        if (state.mitigations[m.id].implemented) {
+          implemented.push(`- ${m.id} ${m.name}`);
+        }
+      }
+      if (implemented.length) sections.push("== Mitigations marked implemented ==\n" + implemented.join("\n"));
+
+      document.querySelector("#notes").value =
+        sections.length ? sections.join("\n\n") : "(all threats applicable, no mitigations marked implemented, protection levels at defaults)";
+    }
+
+    function recompute() {
+      renderThreatScores();
+      renderResults();
+      renderNotes();
+    }
+
+    function handleStateChange(e) {
+      const { scope, key, field } = e.target.dataset;
+      if (!scope || !field) return;
+      const target = key ? state[scope]?.[key] : state[scope];
+      if (!target) return;
+      target[field] = e.target.type === "checkbox" ? e.target.checked : e.target.value;
+      saveState();
+      recompute();
+    }
+
+    document.addEventListener("input", handleStateChange);
+
+    document.querySelector("#reset-btn").addEventListener("click", () => {
+      if (!confirm("Reset all customizations to the embedded defaults?")) return;
+      localStorage.removeItem(STORAGE_KEY);
+      location.reload();
+    });
+
+    function csvEscape(value) {
+      const s = String(value);
+      return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    }
+
+    function buildResultsCsv() {
+      const header = ["mitigation_id", "mitigation_name", "built_in",
+        "score", "score_c", "score_i", "score_a", "threat_count", "threats"];
+      const lines = [header.join(",")];
+      for (const r of scoreMitigations()) {
+        if (r.implemented) continue;
+        if (r.threatCount === 0) continue;
+        lines.push([r.mitigationId, r.mitigationName, r.builtIn,
+        r.score, r.scoreC, r.scoreI, r.scoreA, r.threatCount, r.threats]
+          .map(csvEscape).join(","));
+      }
+      return lines.join("\r\n") + "\r\n";
+    }
+
+    document.querySelector("#export-csv-btn").addEventListener("click", () => {
+      const blob = new Blob([buildResultsCsv()], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = el("a", { href: url, download: "scoring.csv" });
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    document.querySelector("#apply-mapping-cb").checked = state.options.applyTacticMapping;
+    buildProtectionLevelsEditor();
+    buildThreatsEditor();
+    recompute();
+  </script>
+</body>
+
+</html>
